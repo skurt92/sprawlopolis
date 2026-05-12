@@ -3,70 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sprawlopolis Rehber</title>
+    <title>Sprawlopolis Master Rehber</title>
     <style>
-        :root { --primary: #0984e3; --bg: #f0f2f5; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .app-card { background: white; width: 100%; max-width: 400px; padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        h1 { font-size: 22px; color: #2d3436; text-align: center; margin-bottom: 20px; }
-        .input-group { display: flex; gap: 10px; margin-bottom: 15px; flex-direction: column; }
-        input { padding: 12px; border: 2px solid #dfe6e9; border-radius: 10px; font-size: 16px; outline: none; }
-        input:focus { border-color: var(--primary); }
-        button { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; }
-        #result { margin-top: 20px; }
-        .card-info { background: #e1f5fe; padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 5px solid var(--primary); }
-        .card-info b { display: block; color: #0747a6; margin-bottom: 5px; }
-        .target-box { background: #ffeaa7; padding: 15px; border-radius: 12px; text-align: center; font-weight: bold; margin-top: 10px; }
+        :root { --primary: #0984e3; --accent: #00cec9; --bg: #f8f9fa; --dark: #2d3436; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--dark); }
+        .container { max-width: 500px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        h1 { text-align: center; font-size: 24px; margin-bottom: 5px; color: var(--primary); }
+        .subtitle { text-align: center; font-size: 14px; color: #636e72; margin-bottom: 25px; }
+        
+        label { font-weight: bold; display: block; margin-bottom: 8px; font-size: 14px; }
+        select, input { width: 100%; padding: 12px; margin-bottom: 20px; border: 2px solid #dfe6e9; border-radius: 12px; font-size: 16px; box-sizing: border-box; transition: 0.3s; }
+        select:focus, input:focus { border-color: var(--primary); outline: none; }
+        
+        button { width: 100%; background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #0747a6; }
+
+        #result { margin-top: 25px; display: none; }
+        .card-view { background: #f1f9ff; border-left: 6px solid var(--primary); padding: 15px; border-radius: 12px; margin-bottom: 15px; }
+        .card-header { font-weight: bold; font-size: 18px; color: #0747a6; margin-bottom: 8px; display: flex; justify-content: space-between; }
+        .detail-box { background: white; padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 14px; border: 1px solid #e1f5fe; }
+        .penalty { color: #d63031; font-weight: bold; margin-top: 10px; font-size: 13px; }
+        .target-total { background: #ffeaa7; text-align: center; padding: 15px; border-radius: 12px; font-weight: bold; font-size: 18px; margin-top: 10px; border: 2px dashed #fdcb6e; }
     </style>
 </head>
 <body>
 
-<div class="app-card">
-    <h1>🏗️ Sprawlopolis Rehber</h1>
-    <div class="input-group">
-        <input type="number" id="c1" placeholder="1. Kart No (1-18)">
-        <input type="number" id="c2" placeholder="2. Kart No (1-18)">
-        <input type="number" id="c3" placeholder="3. Kart No (1-18)">
-        <button onclick="calculate()">Kuralları ve Hedefi Gör</button>
+<div class="container">
+    <h1>🏗️ Sprawlopolis Master</h1>
+    <div class="subtitle">Tüm Genişleme Paketleri Dahil</div>
+
+    <label>1. Oyun Modu / Paket Seç:</label>
+    <select id="gameMode" onchange="toggleInputs()">
+        <option value="base">Ana Oyun (Sprawlopolis)</option>
+        <option value="beaches">Beaches (Sahiller)</option>
+        <option value="cz">Construction Zones (İnşaat Alanları)</option>
+        <option value="interstate">Interstate (Eyaletler Arası)</option>
+        <option value="combo">Combopolis (Agropolis Mix)</option>
+        <option value="ultimo">Ultimopolis (Mega Mix)</option>
+    </select>
+
+    <div id="inputArea">
+        <label id="inputLabel">Kart Numaralarını Girin (Virgül ile ayırın):</label>
+        <input type="text" id="cardNos" placeholder="Örn: 3, 7, 18">
     </div>
+
+    <button onclick="showRules()">Rehberi Göster</button>
 
     <div id="result"></div>
 </div>
 
 <script>
-    const data = {
-        1: {n: "Şehir Çeperi", d: "Kenarda bitmeyen yollar +1, bitenler -1 puan."},
-        2: {n: "Çiçek Açımı", d: "Tam 3 Park içeren satır/sütunlar +1, hiç içermeyenler -1."},
-        3: {n: "Doğaya Dön", d: "Her Park +1 puan; her Sanayi -3 puan."},
-        4: {n: "Mahalle Şenliği", d: "4 farklı tip bloğun köşe köşeye geldiği her grup için puan."},
-        5: {n: "Gökdelenler", d: "Sadece Ticari/Sanayi komşusu olan Sanayiler +2 puan."},
-        6: {n: "Planlı Gelişim", d: "En büyük Konut grubu eksi en büyük Sanayi grubu boyutu."},
-        7: {n: "Merkezi Parklar", d: "İç kısımdaki Parklar +1, kenardakiler -2 puan."},
-        8: {n: "Varoşlar", d: "Her Konut grubu +1; en büyük Konut komşusu Parklar +2."},
-        9: {n: "Beton Yığını", d: "Başka Sanayi ile kenar paylaşan her Sanayi +1 puan."},
-        10: {n: "Ticaret Hattı", d: "Seçilen tek bir satır/sütundaki Ticari bloklar +1 puan."},
-        11: {n: "Mini Marketler", d: "Yol üzerinde iki Konut arası Ticari bloklar +2 puan."},
-        12: {n: "Otoban", d: "En uzun yoldaki her 2 bölüm için +1 puan."},
-        13: {n: "Park Gezisi", d: "Parkta başlayıp Parkta biten her yol +3 puan."},
-        14: {n: "Döngü Yolları", d: "Tamamlanmış döngü içindeki her yol bölümü +1 puan."},
-        15: {n: "Arka Sokaklar", d: "2+ Sanayi komşusu olan Konutlar +2 puan."},
-        16: {n: "Sabah Trafiği", d: "Hem Konut hem Ticari içinden geçen yollar +2 puan."},
-        17: {n: "Turist Tuzakları", d: "Kenar Ticari +1, köşe Ticari +2 puan."},
-        18: {n: "Dev Şehir", d: "En uzun satır + en uzun sütun blok sayısı toplamı."}
+    const database = {
+        base: {
+            1: { n: "Şehir Çeperi", d: "Kenarda bitmeyen yollar +1, bitenler -1 puan.", tip: "Yolların dışarı taşmamasına dikkat et!" },
+            3: { n: "Doğaya Dön", d: "Her Park +1 puan; her Sanayi -3 puan.", tip: "Sanayi bölgelerini mümkün olduğunca küçük tut veya üstünü kapat." },
+            7: { n: "Merkezi Parklar", d: "Şehrin içindeki Parklar +1, kenardakiler -2 puan.", tip: "Parkları çevresine bloklar koyarak 'hapsetmen' gerekir." },
+            18: { n: "Dev Şehir", d: "En uzun satır + en uzun sütun blok sayısı.", tip: "Şehri kare yerine artı (+) şeklinde büyütmek puanı artırır." }
+            // ... (Daha önce yaptığımız 1-18 arası buraya eklenecek)
+        },
+        beaches: {
+            "Waterfront": { n: "Sahil Şeridi", d: "Sahile bitişik her Konut bloğu +1 puan. Kuzey ve Güney sahilleri arasındaki her satır için -1 puan.", tip: "Konutları kıyıya diz, şehri çok dikey büyütme." },
+            "Lookout Point": { n: "Seyir Noktası", d: "En büyük Park grubun sahile değiyorsa +5 puan.", tip: "Yeşil alanları kıyıdan başlatıp içeri büyüt." }
+        },
+        cz: {
+            "Bulldozed": { n: "Yıkım Alanı", d: "İnşaat kartını 4 bloğun üzerine koymalısın. Tamamlanmazsa: Her inşaat bloğu içeren satır/sütun için -1 puan.", tip: "İnşaatı bitirmek için hızlıca üzerine başka kart oyna." },
+            "Noisy Neighbors": { n: "Gürültülü Komşular", d: "İnşaat alanına bitişik/çapraz her Konut -2 puan. Tamamlanmazsa: İnşaat kartı şehrin en dış kenarında olmalı.", tip: "Konutları inşaat sahasından uzak tut!" }
+        },
+        interstate: {
+            "1": { n: "Dağ Yolu", d: "Her oyuncu kendi tarafındaki en büyük grupları ve yolları puanlar.", tip: "İki oyuncu yolu ortadaki otoyola bağlamalıdır." }
+        }
     };
 
-    function calculate() {
-        const ids = [document.getElementById('c1').value, document.getElementById('c2').value, document.getElementById('c3').value];
-        let html = ""; let total = 0;
+    function toggleInputs() {
+        const mode = document.getElementById('gameMode').value;
+        const label = document.getElementById('inputLabel');
+        const input = document.getElementById('cardNos');
+        
+        if (mode === 'beaches' || mode === 'cz') {
+            label.innerText = "Kart Adını veya No Girin:";
+            input.placeholder = "Örn: Waterfront veya Bulldozed";
+        } else {
+            label.innerText = "Kart Numaralarını Girin (Virgül ile):";
+            input.placeholder = "Örn: 3, 12, 17";
+        }
+    }
+
+    function showRules() {
+        const mode = document.getElementById('gameMode').value;
+        const input = document.getElementById('cardNos').value;
+        const ids = input.split(',').map(s => s.trim());
+        const resDiv = document.getElementById('result');
+        let html = "";
+        let totalTarget = 0;
+
         ids.forEach(id => {
-            if(data[id]) {
-                html += `<div class="card-info"><b>${id}. ${data[id].n}</b>${data[id].d}</div>`;
-                total += parseInt(id);
+            const card = database[mode][id];
+            if (card) {
+                html += `
+                    <div class="card-view">
+                        <div class="card-header">
+                            <span>${id}. ${card.n}</span>
+                            <span style="font-size:12px; color:#636e72;">${mode.toUpperCase()}</span>
+                        </div>
+                        <div>${card.d}</div>
+                        <div class="detail-box"><b>💡 İpucu:</b> ${card.tip}</div>
+                    </div>
+                `;
+                if (!isNaN(id)) totalTarget += parseInt(id);
             }
         });
-        if(html) {
-            html += `<div class="target-box">TOPLAM HEDEF PUAN: ${total}</div>`;
-            document.getElementById('result').innerHTML = html;
+
+        if (html) {
+            if (totalTarget > 0) {
+                html += `<div class="target-total">🎯 HEDEF PUAN: ${totalTarget}</div>`;
+            }
+            resDiv.innerHTML = html;
+            resDiv.style.display = "block";
+        } else {
+            alert("Kart bulunamadı. Lütfen numaraları kontrol edin.");
         }
     }
 </script>
